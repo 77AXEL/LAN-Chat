@@ -1,0 +1,61 @@
+:root {
+    --app-height: 100vh;
+}
+
+@supports (height: 100dvh) {
+    :root {
+        --app-height: 100dvh;
+    }
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+@media only screen and (max-width: 768px) {
+    ::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+    }
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #3a3a3c;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #48484a;
+}
+
+.mobile-safe-height {
+    height: var(--app-height);
+    height: 100dvh;
+}
+
+.input-container {
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.hide-mobile {
+    display: block;
+}
+
+.show-mobile {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .hide-mobile {
+        display: none;
+    }
+
+    .show-mobile {
+        display: block;
+    }
+}

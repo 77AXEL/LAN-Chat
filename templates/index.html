@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport" />
+  <title>LAN Chat</title>
+  <link rel="icon" href="{{ url_for('static', filename='assets/chat_24dp_0084FF_FILL1_wght400_GRAD0_opsz24.svg')}}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/symbols.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+  <script src="{{ url_for('static', filename='js/tailwindcss.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/socket.io.js') }}"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#0084ff",
+            "primary-dark": "#0066cc",
+            "background-light": "#ffffff",
+            "background-dark": "#0a0a0a",
+            "surface-dark": "#1c1c1e",
+            "surface-light": "#f2f2f7",
+            "border-dark": "#2c2c2e",
+            "border-light": "#e5e5ea",
+          },
+          fontFamily: {
+            "sans": ["Inter", "system-ui", "sans-serif"],
+          },
+          borderRadius: {
+            "DEFAULT": "0.5rem",
+            "xl": "1rem",
+            "2xl": "1.25rem",
+            "3xl": "1.5rem",
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0', transform: 'translateY(10px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' }
+            },
+            slideIn: {
+              '0%': { transform: 'translateX(-100%)' },
+              '100%': { transform: 'translateX(0)' }
+            }
+          },
+          animation: {
+            fadeIn: 'fadeIn 0.3s ease-out',
+            slideIn: 'slideIn 0.3s ease-out'
+          }
+        },
+      },
+    }
+  </script>
+</head>
+
+<body class="bg-background-dark text-white font-sans overflow-hidden antialiased">
+  <div class="flex mobile-safe-height w-full mx-auto">
+
+    <div id="users-view"
+      class="w-full md:w-96 md:border-r border-border-dark bg-surface-dark flex flex-col mobile-safe-height">
+      <header class="px-4 py-3 border-b border-border-dark bg-surface-dark sticky top-0 z-10">
+        <div class="flex items-center justify-between">
+          <h1 class="text-2xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">Chats
+          </h1>
+          <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/20">
+              <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+              <span class="text-xs font-medium text-green-400" id="my-username-badge"></span>
+            </div>
+            <button id="logout-btn" class="p-2 rounded-full hover:bg-border-dark transition-colors">
+              <span class="material-symbols-outlined text-gray-400 text-[20px]">logout</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div class="px-4 py-3 border-b border-border-dark">
+        <div class="relative">
+          <span
+            class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[20px]">search</span>
+          <input type="text" id="search-users" placeholder="Search users..."
+            class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-background-dark border border-border-dark focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all text-sm" />
+        </div>
+      </div>
+
+      <div id="user-list" class="flex-1 overflow-y-auto">
+        <div class="p-4 text-center text-gray-400 text-sm">
+          <span class="material-symbols-outlined text-4xl mb-2 opacity-50">person_search</span>
+          <p>No users online</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="chat-view" class="flex-1 flex flex-col mobile-safe-height hidden md:flex bg-background-dark">
+      <header id="chat-header"
+        class="hidden px-4 md:px-6 py-3 border-b border-border-dark bg-background-dark sticky top-0 z-10">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <button id="back-btn"
+              class="md:hidden p-2 -ml-2 rounded-full hover:bg-border-dark transition-colors flex items-center justify-center">
+              <span class="material-symbols-outlined text-[24px]">arrow_back</span>
+            </button>
+            <div
+              class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center shadow-lg">
+              <span class="material-symbols-outlined text-white text-[20px]">person</span>
+            </div>
+            <div>
+              <h2 class="font-semibold text-base" id="chat-username">Select a user</h2>
+              <div class="flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                <span class="text-xs text-gray-400">Online</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div id="empty-state" class="flex-1 flex items-center justify-center p-8 bg-background-dark">
+        <div class="text-center max-w-xs">
+          <div
+            class="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-primary/10 to-blue-600/10 flex items-center justify-center">
+            <span class="material-symbols-outlined text-primary text-[40px]">chat</span>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">LAN Messenger</h3>
+          <p class="text-gray-400 text-sm">Select a conversation to start chatting</p>
+        </div>
+      </div>
+
+      <div id="messages-scroll" class="hidden flex-1 overflow-y-auto px-4 md:px-6 py-4 bg-background-dark">
+        <div id="chat-container" class="max-w-3xl mx-auto space-y-4">
+        </div>
+      </div>
+
+      <div id="input-area" class="hidden px-4 md:px-6 py-3 md:py-4 input-container">
+        <div class="max-w-3xl mx-auto">
+          <div
+            class="flex items-end gap-2 bg-surface-dark rounded-2xl border border-border-dark p-2 focus-within:ring-2 focus-within:ring-primary/30 transition-all">
+            <input type="text" id="msg_area" placeholder="Type a message..."
+              class="flex-1 bg-transparent border-none focus:ring-0 text-sm md:text-base py-2 px-2 placeholder-gray-400 bg-background-dark" />
+            <button id="send_btn"
+              class="p-2 bg-primary hover:bg-primary-dark rounded-full transition-all shadow-lg shadow-primary/30 self-end flex items-center justify-center">
+              <span class="material-symbols-outlined text-white text-[20px]">send</span>
+            </button>
+          </div>
+          <div id="typing-indicator" class="hidden mt-2 text-xs text-gray-400 italic"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="name-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-md items-center justify-center z-50 p-4">
+    <div
+      class="bg-surface-dark rounded-3xl p-6 md:p-8 w-full max-w-md shadow-2xl border border-border-dark animate-fadeIn">
+      <div class="text-center mb-6">
+        <div
+          class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center shadow-lg shadow-primary/30">
+          <span class="material-symbols-outlined text-white text-[32px]">chat</span>
+        </div>
+        <h2 class="text-2xl font-bold mb-2">Welcome to LAN Chat</h2>
+        <p class="text-sm text-gray-400">Choose a nickname to get started</p>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-2 text-gray-300">Your Name</label>
+          <input id="name-input" type="text"
+            class="w-full px-4 py-3 rounded-xl bg-background-dark border border-border-dark focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+            placeholder="Enter your name..." />
+        </div>
+        <div id="name-error" class="hidden text-sm text-red-500 bg-red-900/20 px-3 py-2 rounded-lg">
+        </div>
+        <button id="name-submit"
+          class="w-full px-6 py-3 bg-primary hover:bg-primary-dark text-white font-medium rounded-xl transition-all shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40">
+          Continue
+        </button>
+      </div>
+    </div>
+  </div>
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+
+</html>
