@@ -1,5 +1,6 @@
 # LAN Chat
 <p align="center">
+  <a href="https://github.com/77axel/Lan-Chat/actions/workflows/docker-image.yml"><img src="https://github.com/77axel/Lan-Chat/actions/workflows/docker-image.yml/badge.svg" alt="Docker Image"></a>
   <img src="https://img.shields.io/badge/Open_Source-Yes-red" alt="Open Source">
   <img src="https://img.shields.io/badge/Platform-Windows%20|%20macOS%20|%20Linux-blue" alt="Platform Support">
   <img src="https://img.shields.io/badge/License-MIT-green" alt="License">
