@@ -1,18 +1,26 @@
-name: Docker Image CI
+name: Docker Image
 
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag lan-chat2
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build . --file Dockerfile --tag lan-chat
+
+      - name: Save Docker image as tar
+        run: docker save lan-chat -o lan-chat.tar
+
+      - name: Upload lan-chat.tar to latest release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: lan-chat.tar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
