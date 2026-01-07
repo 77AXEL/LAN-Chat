@@ -2,7 +2,8 @@ name: Docker Image
 
 on:
   push:
-    branches: [ "main" ]
+    tags:
+      - "v*"
 
 jobs:
   build:
@@ -18,7 +19,7 @@ jobs:
       - name: Save Docker image as tar
         run: docker save lan-chat -o lan-chat.tar
 
-      - name: Upload lan-chat.tar to latest release
+      - name: Upload lan-chat.tar to release
         uses: softprops/action-gh-release@v2
         with:
           files: lan-chat.tar
